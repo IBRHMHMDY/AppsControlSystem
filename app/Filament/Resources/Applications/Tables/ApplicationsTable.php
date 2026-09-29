@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\Applications\Tables;
 
-use App\Actions\Applications\ActivateApplicationAction;
-use App\Actions\Applications\DeactivateApplicationAction;
-use App\Actions\Applications\DeleteApplicationAction;
+use App\Actions\Application\ActivateApplicationAction;
+use App\Actions\Application\DeactivateApplicationAction;
+use App\Actions\Application\DeleteApplicationAction;
+use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -58,7 +59,7 @@ class ApplicationsTable
                     ->label('Activate')
                     ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
-                    ->visible(fn (Application $record): bool => $record->status->value === 'inactive')
+                    ->visible(fn (Application $record): bool => $record->status === ApplicationStatus::INACTIVE)
                     ->action(function (Application $record): void {
                         app(ActivateApplicationAction::class)
                             ->handle($record);
@@ -68,7 +69,7 @@ class ApplicationsTable
                     ->label('Deactivate')
                     ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation()
-                    ->visible(fn (Application $record): bool => $record->status->value === 'active')
+                    ->visible(fn (Application $record): bool => $record->status === ApplicationStatus::ACTIVE)
                     ->action(function (Application $record): void {
                         app(DeactivateApplicationAction::class)
                             ->handle($record);

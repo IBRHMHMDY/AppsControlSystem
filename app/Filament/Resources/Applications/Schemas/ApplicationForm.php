@@ -37,7 +37,8 @@ class ApplicationForm
 
                     Textarea::make('description')
                         ->rows(4)
-                        ->maxLength(2000),
+                        ->maxLength(2000)
+                        ->columnSpanFull(),
                 ])
                 ->columns(2),
 

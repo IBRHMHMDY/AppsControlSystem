@@ -11,25 +11,41 @@ class ApplicationInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('name'),
+                TextEntry::make('name')
+                    ->label('Application Name'),
+
                 TextEntry::make('slug'),
-                TextEntry::make('package_name'),
-                TextEntry::make('platform'),
+
+                TextEntry::make('package_name')
+                    ->label('Package Name'),
+
+                TextEntry::make('platform')
+                    ->badge(),
+
+                TextEntry::make('status')
+                    ->badge(),
+
                 TextEntry::make('description')
                     ->placeholder('-')
                     ->columnSpanFull(),
-                TextEntry::make('status')
-                    ->badge(),
+
                 TextEntry::make('firebase_project_id')
+                    ->label('Firebase Project ID')
                     ->placeholder('-'),
+
                 TextEntry::make('current_version')
+                    ->label('Current Version')
                     ->placeholder('-'),
+
                 TextEntry::make('current_build_number')
+                    ->label('Current Build Number')
                     ->numeric()
                     ->placeholder('-'),
+
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),
+
                 TextEntry::make('updated_at')
                     ->dateTime()
                     ->placeholder('-'),
