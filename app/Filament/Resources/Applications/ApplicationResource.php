@@ -6,6 +6,7 @@ use App\Filament\Resources\Applications\Pages\CreateApplication;
 use App\Filament\Resources\Applications\Pages\EditApplication;
 use App\Filament\Resources\Applications\Pages\ListApplications;
 use App\Filament\Resources\Applications\Pages\ViewApplication;
+use App\Filament\Resources\Applications\RelationManagers\TokensRelationManager;
 use App\Filament\Resources\Applications\Schemas\ApplicationForm;
 use App\Filament\Resources\Applications\Schemas\ApplicationInfolist;
 use App\Filament\Resources\Applications\Tables\ApplicationsTable;
@@ -41,7 +42,9 @@ class ApplicationResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            TokensRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
