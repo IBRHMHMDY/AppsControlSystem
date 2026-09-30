@@ -39,6 +39,16 @@ Route::prefix('v1')->group(function (): void {
             ])
             ->name('api.v1.devices.update');
 
+        Route::post(
+            'devices/{device}/fcm-token',
+            [DeviceController::class, 'refreshFcmToken'],
+        )
+            ->middleware([
+                'abilities:'.ApplicationTokenAbility::DEVICE_UPDATE->value,
+                'throttle:device-update',
+            ])
+            ->name('api.v1.devices.fcm-token');
+
         Route::post('devices/{device}/deactivate', [DeviceController::class, 'deactivate'])
             ->middleware([
                 'abilities:'.ApplicationTokenAbility::DEVICE_UPDATE->value,

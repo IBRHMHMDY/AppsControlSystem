@@ -16,7 +16,6 @@ class UpdateDeviceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'fcm_token' => ['required', 'string'],
             'platform' => [
                 'required',
                 'string',

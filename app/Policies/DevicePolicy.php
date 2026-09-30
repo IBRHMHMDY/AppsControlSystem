@@ -2,18 +2,23 @@
 
 namespace App\Policies;
 
+use App\Models\Application;
 use App\Models\Device;
-use App\Models\User;
 
 class DevicePolicy
 {
-    public function view(User $user, Device $device): bool
+    public function view(Application $application, Device $device): bool
     {
-        return $device->application?->api_user_id === $user->id;
+        return $device->application_id === $application->id;
     }
 
-    public function update(User $user, Device $device): bool
+    public function update(Application $application, Device $device): bool
     {
-        return $device->application?->api_user_id === $user->id;
+        return $device->application_id === $application->id;
+    }
+
+    public function delete(Application $application, Device $device): bool
+    {
+        return false;
     }
 }

@@ -16,18 +16,51 @@ class RegisterDeviceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'device_identifier' => ['required', 'string', 'max:255'],
-            'fcm_token' => ['required', 'string'],
+            'device_identifier' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'fcm_token' => [
+                'required',
+                'string',
+            ],
+
             'platform' => [
                 'required',
                 'string',
                 Rule::enum(DevicePlatform::class),
             ],
-            'user_identifier' => ['nullable', 'string', 'max:255'],
-            'app_version' => ['nullable', 'string', 'max:50'],
-            'os_version' => ['nullable', 'string', 'max:50'],
-            'locale' => ['nullable', 'string', 'max:10'],
-            'timezone' => ['nullable', 'timezone'],
+
+            'user_identifier' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'app_version' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            'os_version' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            'locale' => [
+                'nullable',
+                'string',
+                'max:10',
+            ],
+
+            'timezone' => [
+                'nullable',
+                'timezone',
+            ],
         ];
     }
 }
