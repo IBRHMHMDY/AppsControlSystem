@@ -44,11 +44,6 @@ return new class extends Migration
 
             $table->index([
                 'application_id',
-                'fcm_token',
-            ]);
-
-            $table->index([
-                'application_id',
                 'is_active',
             ]);
 

@@ -47,7 +47,7 @@ class ApplicationForm
                     TextInput::make('firebase_project_id')
                         ->label('Firebase Project ID')
                         ->maxLength(255),
-                ]),
+                ])->columns(2),
 
             Section::make('Version')
                 ->schema([
