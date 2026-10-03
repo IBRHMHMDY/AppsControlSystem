@@ -97,7 +97,7 @@ class DeviceController extends Controller
     {
         /** @var Application $application */
         $application = $request->attributes->get('application');
-        if ($application instanceof Application) {
+        if (!$application instanceof Application) {
             throw new ApiException(
                 message: 'Application context could not be resolved.',
                 status: 403,
