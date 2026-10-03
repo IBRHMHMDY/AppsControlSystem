@@ -2,22 +2,34 @@
 
 namespace App\Services;
 
-use Kreait\Firebase\Contract\Messaging;
+use App\Exceptions\ApiException;
+use App\Models\Application;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 
 final class FirebaseService
 {
     public function __construct(
-        private readonly Messaging $messaging,
+        private readonly ApplicationFirebaseFactory $factory,
     ) {}
 
-    public function sendToToken(
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function sendToApplicationToken(
+        Application $application,
         string $token,
         string $title,
         string $body,
         array $data = [],
     ): array {
+        if (! $application->isActive()) {
+            throw new ApiException(
+                message: 'Cannot send FCM notification for an inactive application.',
+                status: 403,
+            );
+        }
         $message = CloudMessage::new()
             ->toToken($token)
             ->withNotification(
@@ -28,12 +40,13 @@ final class FirebaseService
             )
             ->withData($this->normalizeData($data));
 
-        return $this->messaging->send($message);
+        return $this->factory
+            ->messaging($application)
+            ->send($message);
     }
 
     /**
-     * @param array<string, mixed> $data
-     *
+     * @param  array<string, mixed>  $data
      * @return array<string, string>
      */
     private function normalizeData(array $data): array

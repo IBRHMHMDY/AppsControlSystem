@@ -13,6 +13,8 @@ final class SendFcmNotificationAction
 
     /**
      * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
      */
     public function handle(
         Device $device,
@@ -20,7 +22,8 @@ final class SendFcmNotificationAction
         string $body,
         array $data = [],
     ): array {
-        return $this->firebase->sendToToken(
+        return $this->firebase->sendToApplicationToken(
+            application: $device->application,
             token: $device->fcm_token,
             title: $title,
             body: $body,
