@@ -41,4 +41,9 @@ class Application extends Model
     {
         return $this->hasMany(Device::class);
     }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
 }
