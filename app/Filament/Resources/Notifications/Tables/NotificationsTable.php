@@ -2,10 +2,16 @@
 
 namespace App\Filament\Resources\Notifications\Tables;
 
+use App\Actions\Notification\CancelNotificationAction;
+use App\Actions\Notification\RetryNotificationAction;
+use App\Actions\Notification\ScheduleNotificationAction;
+use App\Actions\Notification\SendNotificationAction;
 use App\Enums\NotificationStatus;
 use App\Enums\NotificationTargetType;
+use App\Models\Notification;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -78,7 +84,93 @@ class NotificationsTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+
+                EditAction::make()
+                    ->authorize('update'),
+
+                Action::make('send')
+                    ->label('Send')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color('primary')
+                    ->requiresConfirmation()
+                    ->visible(
+                        fn (Notification $record): bool =>
+                            $record->status === NotificationStatus::DRAFT
+                            && $record->scheduled_at === null,
+                    )
+                    ->authorize('update')
+                    ->action(
+                        fn (
+                            Notification $record,
+                            SendNotificationAction $action,
+                        ): Notification => $action->handle($record),
+                    )
+                    ->successNotificationTitle('Notification queued for delivery.'),
+
+                Action::make('schedule')
+                    ->label('Schedule')
+                    ->icon('heroicon-o-clock')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->visible(
+                        fn (Notification $record): bool =>
+                            $record->status === NotificationStatus::DRAFT
+                            && $record->scheduled_at !== null,
+                    )
+                    ->authorize('update')
+                    ->action(
+                        fn (
+                            Notification $record,
+                            ScheduleNotificationAction $action,
+                        ): Notification => $action->handle(
+                            $record,
+                            $record->scheduled_at,
+                        ),
+                    )
+                    ->successNotificationTitle('Notification scheduled.'),
+
+                Action::make('cancel')
+                    ->label('Cancel')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->visible(
+                        fn (Notification $record): bool => in_array(
+                            $record->status,
+                            [
+                                NotificationStatus::DRAFT,
+                                NotificationStatus::SCHEDULED,
+                                NotificationStatus::PENDING,
+                            ],
+                            true,
+                        ),
+                    )
+                    ->authorize('update')
+                    ->action(
+                        fn (
+                            Notification $record,
+                            CancelNotificationAction $action,
+                        ): Notification => $action->handle($record),
+                    )
+                    ->successNotificationTitle('Notification cancelled.'),
+
+                Action::make('retry')
+                    ->label('Retry')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->visible(
+                        fn (Notification $record): bool =>
+                            $record->status === NotificationStatus::SENT,
+                    )
+                    ->authorize('update')
+                    ->action(
+                        fn (
+                            Notification $record,
+                            RetryNotificationAction $action,
+                        ): Notification => $action->handle($record),
+                    )
+                    ->successNotificationTitle('Notification queued for retry.'),
             ]);
     }
 }
