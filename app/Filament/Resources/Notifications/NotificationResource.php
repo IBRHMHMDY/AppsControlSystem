@@ -6,6 +6,8 @@ use App\Filament\Resources\Notifications\Pages\CreateNotification;
 use App\Filament\Resources\Notifications\Pages\EditNotification;
 use App\Filament\Resources\Notifications\Pages\ListNotifications;
 use App\Filament\Resources\Notifications\Pages\ViewNotification;
+use App\Filament\Resources\Notifications\RelationManagers\DeliveriesRelationManager;
+use App\Filament\Resources\Notifications\RelationManagers\FcmDeliveriesRelationManager;
 use App\Filament\Resources\Notifications\Schemas\NotificationForm;
 use App\Filament\Resources\Notifications\Schemas\NotificationInfolist;
 use App\Filament\Resources\Notifications\Tables\NotificationsTable;
@@ -42,7 +44,8 @@ class NotificationResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            DeliveriesRelationManager::class,
+            FcmDeliveriesRelationManager::class,
         ];
     }
 
