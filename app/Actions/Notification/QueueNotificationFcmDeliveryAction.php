@@ -7,16 +7,11 @@ use App\Jobs\Notification\DeliverFcmNativeNotificationJob;
 use App\Models\NotificationFcmDelivery;
 use Throwable;
 
-final class QueueFcmNativeDeliveryAction
+final class QueueNotificationFcmDeliveryAction
 {
     public function handle(
         NotificationFcmDelivery $delivery,
     ): void {
-        $delivery->update([
-            'status' => FcmNativeDeliveryStatus::QUEUED,
-            'queued_at' => now(),
-        ]);
-
         try {
             DeliverFcmNativeNotificationJob::dispatch(
                 delivery: $delivery,

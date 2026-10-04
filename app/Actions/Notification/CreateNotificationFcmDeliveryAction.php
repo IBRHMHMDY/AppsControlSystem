@@ -10,20 +10,21 @@ final class CreateNotificationFcmDeliveryAction
 {
     public function handle(
         Notification $notification,
-        string $target,
     ): NotificationFcmDelivery {
-        $targetHash = hash('sha256', $target);
-
         return NotificationFcmDelivery::query()->firstOrCreate(
             [
                 'notification_id' => $notification->id,
                 'target_type' => $notification->target_type,
-                'target_hash' => $targetHash,
+                'target_hash' => hash(
+                    'sha256',
+                    (string) $notification->target_value,
+                ),
             ],
             [
-                'target_value' => $target,
+                'target_value' => $notification->target_value,
                 'status' => FcmNativeDeliveryStatus::QUEUED,
                 'queued_at' => now(),
+                'attempts' => 0,
             ],
         );
     }

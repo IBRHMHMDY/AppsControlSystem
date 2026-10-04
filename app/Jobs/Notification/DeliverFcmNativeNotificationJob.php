@@ -36,10 +36,8 @@ final class DeliverFcmNativeNotificationJob implements ShouldQueue
             'error_message' => null,
         ]);
 
-        $notification = $this->delivery->notification;
-
         $sender->handle(
-            notification: $notification,
+            notification: $this->delivery->notification,
             target: $this->delivery->target_value,
         );
 
@@ -49,7 +47,9 @@ final class DeliverFcmNativeNotificationJob implements ShouldQueue
             'completed_at' => now(),
         ]);
 
-        $aggregator->handle($notification);
+        $aggregator->handle(
+            $this->delivery->notification->refresh(),
+        );
     }
 
     public function failed(
@@ -62,6 +62,8 @@ final class DeliverFcmNativeNotificationJob implements ShouldQueue
         ]);
 
         app(AggregateNotificationStatusAction::class)
-            ->handle($this->delivery->notification);
+            ->handle(
+                $this->delivery->notification->refresh(),
+            );
     }
 }
