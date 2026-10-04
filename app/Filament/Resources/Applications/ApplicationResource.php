@@ -7,7 +7,6 @@ use App\Filament\Resources\Applications\Pages\EditApplication;
 use App\Filament\Resources\Applications\Pages\ListApplications;
 use App\Filament\Resources\Applications\Pages\ViewApplication;
 use App\Filament\Resources\Applications\RelationManagers\DevicesRelationManager;
-use App\Filament\Resources\Applications\RelationManagers\NotificationsRelationManager;
 use App\Filament\Resources\Applications\RelationManagers\TokensRelationManager;
 use App\Filament\Resources\Applications\Schemas\ApplicationForm;
 use App\Filament\Resources\Applications\Schemas\ApplicationInfolist;
@@ -47,7 +46,6 @@ class ApplicationResource extends Resource
         return [
             TokensRelationManager::class,
             DevicesRelationManager::class,
-            NotificationsRelationManager::class
         ];
     }
 
