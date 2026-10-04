@@ -3,10 +3,9 @@
 namespace App\Actions\Notification;
 
 use App\Enums\NotificationDeliveryStatus;
-use App\Jobs\Notification\DeliverNotificationJob;
 use App\Models\Notification;
 use App\Models\NotificationDelivery;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 
 final class DispatchNotificationDeliveryAction
 {
@@ -14,21 +13,20 @@ final class DispatchNotificationDeliveryAction
         private readonly ResolveNotificationDevicesAction $resolver,
     ) {}
 
-    public function handle(Notification $notification): void
+    /**
+     * @return Collection<int, NotificationDelivery>
+     */
+    public function handle(Notification $notification): Collection
     {
         $devices = $this->resolver->handle($notification);
 
-        foreach ($devices as $device) {
-            $delivery = NotificationDelivery::query()->create([
+        return $devices->map(
+            fn ($device): NotificationDelivery => NotificationDelivery::query()->create([
                 'notification_id' => $notification->id,
                 'device_id' => $device->id,
                 'status' => NotificationDeliveryStatus::QUEUED,
                 'queued_at' => now(),
-            ]);
-
-            DeliverNotificationJob::dispatch(
-                delivery: $delivery,
-            );
-        }
+            ]),
+        );
     }
 }
