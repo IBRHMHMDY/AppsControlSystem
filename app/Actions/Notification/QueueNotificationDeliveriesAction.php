@@ -3,7 +3,6 @@
 namespace App\Actions\Notification;
 
 use App\Enums\NotificationDeliveryStatus;
-use App\Enums\NotificationStatus;
 use App\Jobs\Notification\DeliverNotificationJob;
 use App\Models\NotificationDelivery;
 use Illuminate\Support\Collection;
@@ -17,6 +16,19 @@ final class QueueNotificationDeliveriesAction
     public function handle(Collection $deliveries): void
     {
         foreach ($deliveries as $delivery) {
+            if (
+                ! in_array(
+                    $delivery->status,
+                    [
+                        NotificationDeliveryStatus::QUEUED,
+                        NotificationDeliveryStatus::RETRYING,
+                    ],
+                    true,
+                )
+            ) {
+                continue;
+            }
+
             try {
                 DeliverNotificationJob::dispatch(
                     delivery: $delivery,
@@ -25,11 +37,13 @@ final class QueueNotificationDeliveriesAction
                 $delivery->update([
                     'status' => NotificationDeliveryStatus::FAILED,
                     'error_message' => $exception->getMessage(),
+                    'completed_at' => now(),
                 ]);
 
-                $delivery->notification()->update([
-                    'status' => NotificationStatus::FAILED,
-                ]);
+                app(AggregateNotificationStatusAction::class)
+                    ->handle(
+                        $delivery->notification->refresh(),
+                    );
             }
         }
     }

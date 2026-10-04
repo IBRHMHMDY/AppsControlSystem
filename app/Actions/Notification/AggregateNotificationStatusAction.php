@@ -26,31 +26,7 @@ final class AggregateNotificationStatusAction
             return $notification;
         }
 
-        $hasFailedDelivery = $deviceDeliveries->contains(
-            fn ($delivery): bool => in_array(
-                $delivery->status,
-                [
-                    NotificationDeliveryStatus::FAILED,
-                    NotificationDeliveryStatus::INVALID_TOKEN,
-                ],
-                true,
-            ),
-        );
-
-        $hasFailedFcmDelivery = $fcmDeliveries->contains(
-            fn ($delivery): bool => $delivery->status
-                === FcmNativeDeliveryStatus::FAILED,
-        );
-
-        if ($hasFailedDelivery || $hasFailedFcmDelivery) {
-            $notification->update([
-                'status' => NotificationStatus::FAILED,
-            ]);
-
-            return $notification->refresh();
-        }
-
-        $hasPendingDelivery = $deviceDeliveries->contains(
+        $hasPendingDeviceDelivery = $deviceDeliveries->contains(
             fn ($delivery): bool => in_array(
                 $delivery->status,
                 [
@@ -73,9 +49,41 @@ final class AggregateNotificationStatusAction
             ),
         );
 
-        if ($hasPendingDelivery || $hasPendingFcmDelivery) {
+        /*
+         * A notification remains pending while at least one
+         * delivery can still complete.
+         */
+        if ($hasPendingDeviceDelivery || $hasPendingFcmDelivery) {
             $notification->update([
                 'status' => NotificationStatus::PENDING,
+            ]);
+
+            return $notification->refresh();
+        }
+
+        $hasFailedDeviceDelivery = $deviceDeliveries->contains(
+            fn ($delivery): bool => in_array(
+                $delivery->status,
+                [
+                    NotificationDeliveryStatus::FAILED,
+                    NotificationDeliveryStatus::INVALID_TOKEN,
+                ],
+                true,
+            ),
+        );
+
+        $hasFailedFcmDelivery = $fcmDeliveries->contains(
+            fn ($delivery): bool => $delivery->status
+                === FcmNativeDeliveryStatus::FAILED,
+        );
+
+        /*
+         * Failure becomes final only after there are
+         * no pending deliveries left.
+         */
+        if ($hasFailedDeviceDelivery || $hasFailedFcmDelivery) {
+            $notification->update([
+                'status' => NotificationStatus::FAILED,
             ]);
 
             return $notification->refresh();
