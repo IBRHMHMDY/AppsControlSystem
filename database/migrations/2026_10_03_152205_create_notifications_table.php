@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\NotificationStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -30,7 +31,8 @@ return new class extends Migration
 
             $table->text('target_value')->nullable();
 
-            $table->string('status');
+            $table->string('status')
+        ->default(NotificationStatus::DRAFT->value);
 
             $table->timestamp('scheduled_at')->nullable();
 
