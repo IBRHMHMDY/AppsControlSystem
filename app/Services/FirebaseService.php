@@ -61,4 +61,70 @@ final class FirebaseService
 
         return $normalized;
     }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function sendToTopic(
+        Application $application,
+        string $topic,
+        string $title,
+        string $body,
+        array $data = [],
+    ): array {
+        if (! $application->isActive()) {
+            throw new ApiException(
+                message: 'Cannot send FCM notification for an inactive application.',
+                status: 403,
+            );
+        }
+
+        $message = CloudMessage::new()
+            ->toTopic($topic)
+            ->withNotification(
+                Notification::create(
+                    $title,
+                    $body,
+                ),
+            )
+            ->withData($this->normalizeData($data));
+
+        return $this->factory
+            ->messaging($application)
+            ->send($message);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function sendToCondition(
+        Application $application,
+        string $condition,
+        string $title,
+        string $body,
+        array $data = [],
+    ): array {
+        if (! $application->isActive()) {
+            throw new ApiException(
+                message: 'Cannot send FCM notification for an inactive application.',
+                status: 403,
+            );
+        }
+
+        $message = CloudMessage::new()
+            ->toCondition($condition)
+            ->withNotification(
+                Notification::create(
+                    $title,
+                    $body,
+                ),
+            )
+            ->withData($this->normalizeData($data));
+
+        return $this->factory
+            ->messaging($application)
+            ->send($message);
+    }
 }

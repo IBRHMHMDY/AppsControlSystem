@@ -20,6 +20,7 @@ final class CreateNotificationAction
                 'data_payload' => $data->dataPayload,
                 'target_type' => $data->targetType,
                 'target_value' => $data->targetValue,
+                
                 'status' => NotificationStatus::DRAFT,
                 'scheduled_at' => $data->scheduledAt,
                 'created_by' => $data->createdBy,

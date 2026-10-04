@@ -28,6 +28,10 @@ final class ResolveNotificationDevicesAction
                 $notification,
             ),
 
+            NotificationTargetType::DEVICE_TOKEN => $this->resolveDeviceToken(
+                $notification,
+            ),
+
             default => throw ValidationException::withMessages([
                 'target_type' => 'This notification target type is not supported by device delivery.',
             ]),
@@ -104,5 +108,25 @@ final class ResolveNotificationDevicesAction
         }
 
         return array_map('intval', $decoded);
+    }
+
+    /**
+     * @return Collection<int, Device>
+     */
+    private function resolveDeviceToken(Notification $notification): Collection
+    {
+        $device = Device::query()
+            ->where('application_id', $notification->application_id)
+            ->where('fcm_token', $notification->target_value)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $device) {
+            throw ValidationException::withMessages([
+                'target_value' => 'The selected device token is invalid, inactive, or not registered for this application.',
+            ]);
+        }
+
+        return new Collection([$device]);
     }
 }

@@ -52,4 +52,9 @@ class Notification extends Model
     {
         return $this->hasMany(NotificationDelivery::class);
     }
+
+    public function fcmDeliveries(): HasMany
+    {
+        return $this->hasMany(NotificationFcmDelivery::class);
+    }
 }
