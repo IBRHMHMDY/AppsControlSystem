@@ -8,6 +8,7 @@ enum NotificationStatus: string
     case SCHEDULED = 'scheduled';
     case PENDING = 'pending';
     case SENT = 'sent';
+    case FAILED = 'failed';
     case CANCELLED = 'cancelled';
 
     public static function options(): array
