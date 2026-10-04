@@ -2,7 +2,7 @@
 
 namespace App\Jobs\Notification;
 
-use App\Actions\Notification\ResolveNotificationFcmTargetAction;
+use App\Actions\Notification\AggregateNotificationStatusAction;
 use App\Actions\Notification\SendFcmNativeNotificationAction;
 use App\Enums\FcmNativeDeliveryStatus;
 use App\Models\NotificationFcmDelivery;
@@ -25,8 +25,8 @@ final class DeliverFcmNativeNotificationJob implements ShouldQueue
     ) {}
 
     public function handle(
-        ResolveNotificationFcmTargetAction $resolver,
         SendFcmNativeNotificationAction $sender,
+        AggregateNotificationStatusAction $aggregator,
     ): void {
         $this->delivery->increment('attempts');
 
@@ -38,11 +38,9 @@ final class DeliverFcmNativeNotificationJob implements ShouldQueue
 
         $notification = $this->delivery->notification;
 
-        $target = $resolver->handle($notification);
-
         $sender->handle(
             notification: $notification,
-            target: $target,
+            target: $this->delivery->target_value,
         );
 
         $this->delivery->update([
@@ -50,14 +48,20 @@ final class DeliverFcmNativeNotificationJob implements ShouldQueue
             'sent_at' => now(),
             'completed_at' => now(),
         ]);
+
+        $aggregator->handle($notification);
     }
 
-    public function failed(?Throwable $exception): void
-    {
+    public function failed(
+        ?Throwable $exception,
+    ): void {
         $this->delivery->update([
             'status' => FcmNativeDeliveryStatus::FAILED,
             'error_message' => $exception?->getMessage(),
             'completed_at' => now(),
         ]);
+
+        app(AggregateNotificationStatusAction::class)
+            ->handle($this->delivery->notification);
     }
 }

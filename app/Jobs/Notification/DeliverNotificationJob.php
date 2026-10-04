@@ -5,7 +5,7 @@ namespace App\Jobs\Notification;
 use App\Actions\Device\DeactivateInvalidFcmTokenAction;
 use App\Actions\Fcm\ClassifyFcmExceptionAction;
 use App\Actions\Fcm\SendFcmNotificationAction;
-use App\Actions\Notification\AggregateNotificationDeliveryStatusAction;
+use App\Actions\Notification\AggregateNotificationStatusAction;
 use App\Enums\NotificationDeliveryStatus;
 use App\Models\NotificationDelivery;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,7 +30,7 @@ final class DeliverNotificationJob implements ShouldQueue
         SendFcmNotificationAction $action,
         ClassifyFcmExceptionAction $classifier,
         DeactivateInvalidFcmTokenAction $deactivateInvalidToken,
-        AggregateNotificationDeliveryStatusAction $aggregateStatus,
+        AggregateNotificationStatusAction $aggregateStatus,
     ): void {
         $this->delivery->update([
             'status' => NotificationDeliveryStatus::PROCESSING,
@@ -76,7 +76,6 @@ final class DeliverNotificationJob implements ShouldQueue
                 $aggregateStatus->handle(
                     $this->delivery->notification->refresh(),
                 );
-
                 return;
             }
 
@@ -90,10 +89,5 @@ final class DeliverNotificationJob implements ShouldQueue
             'status' => NotificationDeliveryStatus::FAILED,
             'error_message' => $exception?->getMessage(),
         ]);
-
-        app(AggregateNotificationDeliveryStatusAction::class)
-            ->handle(
-                $this->delivery->notification->refresh(),
-            );
     }
 }
