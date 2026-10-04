@@ -2,9 +2,9 @@
 
 namespace App\Jobs\Notification;
 
+use App\Enums\NotificationDeliveryStatus;
 use App\Actions\Fcm\SendFcmNotificationAction;
-use App\Models\Device;
-use App\Models\Notification as NotificationModel;
+use App\Models\NotificationDelivery;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Attributes\Backoff;
@@ -19,18 +19,43 @@ final class DeliverNotificationJob implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        public readonly NotificationModel $notification,
-        public readonly Device $device,
+        public readonly NotificationDelivery $delivery,
     ) {}
 
     public function handle(
         SendFcmNotificationAction $action,
     ): void {
-        $action->handle(
-            device: $this->device,
-            title: $this->notification->title,
-            body: $this->notification->body,
-            data: $this->notification->data_payload ?? [],
-        );
+        $this->delivery->update([
+            'status' => NotificationDeliveryStatus::PROCESSING,
+            'processing_at' => now(),
+            'attempts' => $this->delivery->attempts + 1,
+            'error_message' => null,
+        ]);
+
+        try {
+            $action->handle(
+                device: $this->delivery->device,
+                title: $this->delivery->notification->title,
+                body: $this->delivery->notification->body,
+                data: $this->delivery->notification->data_payload ?? [],
+            );
+
+            $this->delivery->update([
+                'status' => NotificationDeliveryStatus::SENT,
+                'sent_at' => now(),
+            ]);
+
+            $this->delivery->update([
+                'status' => NotificationDeliveryStatus::COMPLETED,
+                'completed_at' => now(),
+            ]);
+        } catch (\Throwable $exception) {
+            $this->delivery->update([
+                'status' => NotificationDeliveryStatus::FAILED,
+                'error_message' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
     }
 }
