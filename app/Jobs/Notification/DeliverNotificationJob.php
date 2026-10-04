@@ -53,10 +53,6 @@ final class DeliverNotificationJob implements ShouldQueue
                 'completed_at' => now(),
             ]);
 
-            $this->delivery->update([
-                'status' => NotificationDeliveryStatus::COMPLETED,
-            ]);
-
             $aggregateStatus->handle(
                 $this->delivery->notification->refresh(),
             );
@@ -76,6 +72,7 @@ final class DeliverNotificationJob implements ShouldQueue
                 $aggregateStatus->handle(
                     $this->delivery->notification->refresh(),
                 );
+
                 return;
             }
 
@@ -88,6 +85,10 @@ final class DeliverNotificationJob implements ShouldQueue
         $this->delivery->update([
             'status' => NotificationDeliveryStatus::FAILED,
             'error_message' => $exception?->getMessage(),
+            'completed_at' => now(),
         ]);
+
+        app(AggregateNotificationStatusAction::class)
+            ->handle($this->delivery->notification);
     }
 }

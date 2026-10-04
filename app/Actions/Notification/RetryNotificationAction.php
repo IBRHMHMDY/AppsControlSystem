@@ -2,9 +2,10 @@
 
 namespace App\Actions\Notification;
 
+use App\Enums\FcmNativeDeliveryStatus;
 use App\Enums\NotificationDeliveryStatus;
 use App\Enums\NotificationStatus;
-use App\Enums\FcmNativeDeliveryStatus;
+use App\Enums\NotificationTargetType;
 use App\Exceptions\ApiException;
 use App\Models\Notification;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +41,7 @@ final class RetryNotificationAction
                 ->whereIn(
                     'status',
                     [
-                        NotificationDeliveryStatus::COMPLETED,
+                        NotificationDeliveryStatus::SENT,
                         NotificationDeliveryStatus::FAILED,
                         NotificationDeliveryStatus::INVALID_TOKEN,
                     ],
@@ -106,8 +107,8 @@ final class RetryNotificationAction
                 && in_array(
                     $notification->target_type,
                     [
-                        \App\Enums\NotificationTargetType::TOPIC,
-                        \App\Enums\NotificationTargetType::CONDITION,
+                        NotificationTargetType::TOPIC,
+                        NotificationTargetType::CONDITION,
                     ],
                     true,
                 )

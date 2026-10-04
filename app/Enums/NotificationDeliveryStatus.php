@@ -10,16 +10,15 @@ enum NotificationDeliveryStatus: string
     case FAILED = 'failed';
     case INVALID_TOKEN = 'invalid_token';
     case RETRYING = 'retrying';
-    case COMPLETED = 'completed';
 
     public static function options(): array
     {
-        $options = [];
-
-        foreach (self::cases() as $case) {
-            $options[$case->value] = $case->value;
-        }
-
-        return $options;
+        return collect(self::cases())
+            ->mapWithKeys(
+                fn (self $case): array => [
+                    $case->value => $case->value,
+                ],
+            )
+            ->all();
     }
 }

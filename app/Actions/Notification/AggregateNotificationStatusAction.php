@@ -2,8 +2,8 @@
 
 namespace App\Actions\Notification;
 
-use App\Enums\NotificationDeliveryStatus;
 use App\Enums\FcmNativeDeliveryStatus;
+use App\Enums\NotificationDeliveryStatus;
 use App\Enums\NotificationStatus;
 use App\Models\Notification;
 
@@ -27,12 +27,19 @@ final class AggregateNotificationStatusAction
         }
 
         $hasFailedDelivery = $deviceDeliveries->contains(
-            fn ($delivery): bool => $delivery->status === NotificationDeliveryStatus::FAILED
-                || $delivery->status === NotificationDeliveryStatus::INVALID_TOKEN,
+            fn ($delivery): bool => in_array(
+                $delivery->status,
+                [
+                    NotificationDeliveryStatus::FAILED,
+                    NotificationDeliveryStatus::INVALID_TOKEN,
+                ],
+                true,
+            ),
         );
 
         $hasFailedFcmDelivery = $fcmDeliveries->contains(
-            fn ($delivery): bool => $delivery->status === FcmNativeDeliveryStatus::FAILED,
+            fn ($delivery): bool => $delivery->status
+                === FcmNativeDeliveryStatus::FAILED,
         );
 
         if ($hasFailedDelivery || $hasFailedFcmDelivery) {
@@ -74,17 +81,20 @@ final class AggregateNotificationStatusAction
             return $notification->refresh();
         }
 
-        $allDeviceDeliveriesCompleted = $deviceDeliveries->every(
-            fn ($delivery): bool => $delivery->status === NotificationDeliveryStatus::COMPLETED,
+        $allDeviceDeliveriesSent = $deviceDeliveries->every(
+            fn ($delivery): bool => $delivery->status
+                === NotificationDeliveryStatus::SENT,
         );
 
         $allFcmDeliveriesSent = $fcmDeliveries->every(
-            fn ($delivery): bool => $delivery->status === FcmNativeDeliveryStatus::SENT,
+            fn ($delivery): bool => $delivery->status
+                === FcmNativeDeliveryStatus::SENT,
         );
 
-        if ($allDeviceDeliveriesCompleted && $allFcmDeliveriesSent) {
+        if ($allDeviceDeliveriesSent && $allFcmDeliveriesSent) {
             $notification->update([
                 'status' => NotificationStatus::SENT,
+                'sent_at' => now(),
             ]);
         }
 
