@@ -80,6 +80,8 @@ final class FirebaseService
             );
         }
 
+        $this->validateTarget($topic);
+
         $message = CloudMessage::new()
             ->toTopic($topic)
             ->withNotification(
@@ -113,6 +115,8 @@ final class FirebaseService
             );
         }
 
+        $this->validateTarget($condition);
+
         $message = CloudMessage::new()
             ->toCondition($condition)
             ->withNotification(
@@ -126,5 +130,15 @@ final class FirebaseService
         return $this->factory
             ->messaging($application)
             ->send($message);
+    }
+
+    private function validateTarget(string $target): void
+    {
+        if (blank($target)) {
+            throw new ApiException(
+                message: 'FCM target cannot be empty.',
+                status: 422,
+            );
+        }
     }
 }
