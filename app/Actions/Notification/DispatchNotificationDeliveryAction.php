@@ -20,13 +20,30 @@ final class DispatchNotificationDeliveryAction
     {
         $devices = $this->resolver->handle($notification);
 
-        return $devices->map(
-            fn ($device): NotificationDelivery => NotificationDelivery::query()->create([
-                'notification_id' => $notification->id,
-                'device_id' => $device->id,
-                'status' => NotificationDeliveryStatus::QUEUED,
-                'queued_at' => now(),
-            ]),
-        );
+        return $devices
+            ->map(
+                fn ($device): NotificationDelivery => NotificationDelivery::query()
+                    ->firstOrCreate(
+                        [
+                            'notification_id' => $notification->id,
+                            'device_id' => $device->id,
+                        ],
+                        [
+                            'status' => NotificationDeliveryStatus::QUEUED,
+                            'queued_at' => now(),
+                        ],
+                    ),
+            )
+            ->filter(
+                fn (NotificationDelivery $delivery): bool => in_array(
+                    $delivery->status,
+                    [
+                        NotificationDeliveryStatus::QUEUED,
+                        NotificationDeliveryStatus::RETRYING,
+                    ],
+                    true,
+                ),
+            )
+            ->values();
     }
 }

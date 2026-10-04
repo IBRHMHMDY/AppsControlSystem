@@ -23,16 +23,16 @@ final class SendNotificationAction
             );
         }
 
-        $deliveries = DB::transaction(function () use ($notification) {
+        return DB::transaction(function () use ($notification) {
             $notification->update([
                 'status' => NotificationStatus::PENDING,
             ]);
 
-            return $this->dispatchDelivery->handle($notification);
+            $deliveries = $this->dispatchDelivery->handle($notification);
+
+            $this->queueDeliveries->handle($deliveries);
+
+            return $notification->refresh();
         });
-
-        $this->queueDeliveries->handle($deliveries);
-
-        return $notification->refresh();
     }
 }
