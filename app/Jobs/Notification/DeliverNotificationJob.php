@@ -2,14 +2,17 @@
 
 namespace App\Jobs\Notification;
 
-use App\Enums\NotificationDeliveryStatus;
+use App\Actions\Device\DeactivateInvalidFcmTokenAction;
+use App\Actions\Fcm\ClassifyFcmExceptionAction;
 use App\Actions\Fcm\SendFcmNotificationAction;
+use App\Enums\NotificationDeliveryStatus;
 use App\Models\NotificationDelivery;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Attributes\Backoff;
 use Illuminate\Queue\Attributes\Timeout;
 use Illuminate\Queue\Attributes\Tries;
+use Throwable;
 
 #[Tries(3)]
 #[Backoff(3)]
@@ -24,6 +27,8 @@ final class DeliverNotificationJob implements ShouldQueue
 
     public function handle(
         SendFcmNotificationAction $action,
+        ClassifyFcmExceptionAction $classifier,
+        DeactivateInvalidFcmTokenAction $deactivateInvalidToken,
     ): void {
         $this->delivery->update([
             'status' => NotificationDeliveryStatus::PROCESSING,
@@ -43,19 +48,37 @@ final class DeliverNotificationJob implements ShouldQueue
             $this->delivery->update([
                 'status' => NotificationDeliveryStatus::SENT,
                 'sent_at' => now(),
+                'completed_at' => now(),
             ]);
 
             $this->delivery->update([
                 'status' => NotificationDeliveryStatus::COMPLETED,
-                'completed_at' => now(),
             ]);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
+            $status = $classifier->handle($exception);
+
             $this->delivery->update([
-                'status' => NotificationDeliveryStatus::FAILED,
+                'status' => $status,
                 'error_message' => $exception->getMessage(),
             ]);
 
+            if ($status === NotificationDeliveryStatus::INVALID_TOKEN) {
+                $deactivateInvalidToken->handle(
+                    $this->delivery->device,
+                );
+
+                return;
+            }
+
             throw $exception;
         }
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        $this->delivery->update([
+            'status' => NotificationDeliveryStatus::FAILED,
+            'error_message' => $exception?->getMessage(),
+        ]);
     }
 }
