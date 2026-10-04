@@ -27,6 +27,13 @@ class Notification extends Model
         'created_by',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Notification $notification): void {
+            $notification->status ??= NotificationStatus::DRAFT;
+        });
+    }
+
     protected function casts(): array
     {
         return [
